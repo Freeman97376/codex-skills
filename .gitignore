@@ -1,0 +1,29 @@
+# Local evaluation runs and raw model/session evidence
+.skillbench/
+.publish/
+.local/
+office/records/collaboration/
+
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+.aws/
+.ssh/
+
+# Generated caches and temporary outputs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+node_modules/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

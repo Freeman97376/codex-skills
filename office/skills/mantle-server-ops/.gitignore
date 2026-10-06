@@ -1,0 +1,3 @@
+
+# Local server connection profiles; exclude from exported packages too.
+/.local/

@@ -1,0 +1,6 @@
+interface:
+  display_name: "测试治理"
+  short_description: "Govern regression tests and reproducible confusing inputs"
+  default_prompt: "Use $govern-change-tests to analyze this change and produce governed reusable tests, including reproducible confusing inputs where relevant."
+policy:
+  allow_implicit_invocation: true

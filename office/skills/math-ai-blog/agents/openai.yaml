@@ -1,0 +1,4 @@
+interface:
+  display_name: "数学与 AI 博客"
+  short_description: "用例子引入每个数学主题，逐步证明、检验边界并建立具体 AI 联系"
+  default_prompt: "使用 $math-ai-blog 撰写或修订这篇数学博客，让每个实质性部分都按七步顺序展开。"

@@ -1,0 +1,96 @@
+<!-- frontend-gacha gallery v1 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@@GACHA_TITLE@@ · Frontend Gacha</title>
+<style>
+:root{color-scheme:dark;--bg:#11151c;--surface:#1b222d;--text:#f4f7fb;--muted:#adb9c9;--line:#465367;--accent:#9dd5ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,"Microsoft YaHei",sans-serif}
+main,header,footer{max-width:1440px;margin:auto;padding:28px 32px}header{padding-top:48px;padding-bottom:16px}
+.brand{color:var(--accent);font-weight:650;margin:0 0 10px}h1{font-size:clamp(28px,4vw,42px);line-height:1.18;margin:0 0 14px}
+header>p{max-width:760px;color:var(--muted)}.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:24px}
+button,a{font:inherit}button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;padding:10px 16px;cursor:pointer;min-height:44px}
+button:hover,a:hover{filter:brightness(1.15)}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+button[aria-pressed=true]{background:var(--accent);color:#101a25;border-color:var(--accent)}button:disabled{opacity:.5;cursor:default}
+.hint{font-size:14px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.card{min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:12px;overflow:hidden}
+.card.selected{outline:3px solid var(--accent);outline-offset:3px}.card-heading{display:flex;align-items:flex-start;gap:14px;padding:20px;min-height:122px}
+.badge{flex:none;display:grid;place-items:center;border:1px solid var(--line);width:36px;height:36px;border-radius:50%;font-weight:700}
+h2{font-size:19px;margin:0 0 6px}.card p{font-size:14px;margin:0;color:var(--muted)}.frame-wrap{background:#0a0e14;display:flex;justify-content:center;padding:0 12px}
+iframe{display:block;width:100%;height:560px;border:0;background:white;color-scheme:light;border-radius:5px;transition:width .16s ease}
+body.mobile iframe{width:375px;max-width:100%}.card-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px}
+a{color:var(--accent);text-underline-offset:4px;min-height:44px;display:inline-flex;align-items:center}
+.review{margin-top:32px;border-top:1px solid var(--line);padding-top:24px}.review h2{font-size:22px}
+textarea{display:block;width:100%;min-height:108px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:14px;background:#11151c;color:var(--text);font:15px/1.6 system-ui;margin:14px 0}
+.status{min-height:24px;color:var(--accent)}footer{font-size:14px;color:var(--muted);padding-top:0}.skip{position:absolute;left:16px;top:-100px}.skip:focus{top:8px;background:var(--bg);padding:8px}
+@media(max-width:800px){main,header,footer{padding-left:16px;padding-right:16px}.grid{grid-template-columns:1fr}.card-heading{min-height:0}header{padding-top:32px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body data-run="@@GACHA_RUN@@">
+<a class="skip" href="#choices">跳到方案</a>
+<header>
+<p class="brand">Frontend Gacha</p>
+<h1>@@GACHA_TITLE@@</h1>
+<p>@@GACHA_SUMMARY@@</p>
+<div class="toolbar" aria-label="预览尺寸">
+<button type="button" id="desktop" aria-pressed="true">适应宽度</button>
+<button type="button" id="mobile" aria-pressed="false">手机宽度</button>
+<span class="hint">同一内容，五种表达。每个预览都可以直接操作。</span>
+</div>
+</header>
+<main>
+<div id="choices" class="grid">@@GACHA_CARDS@@</div>
+<section class="review" aria-labelledby="review-heading">
+<h2 id="review-heading">选好之后，继续完善</h2>
+<p class="hint">选择一套，复制下面的文字发回当前任务。也可以补充喜欢的细节或修改意见。</p>
+<label for="feedback">发给 Codex 的选择结果</label>
+<textarea id="feedback" placeholder="先点击某个方案的“选这套”，再补充你的意见。"></textarea>
+<button id="copy" type="button" disabled>复制选择结果</button>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+</section>
+</main>
+<footer>所有方案都会保留。此页面只帮助你比较和表达选择；发回任务后，Codex 才会整理选中代码。</footer>
+<script>
+(() => {
+  const feedback = document.getElementById('feedback');
+  const status = document.getElementById('status');
+  const copy = document.getElementById('copy');
+  const buttons = Array.from(document.querySelectorAll('.choose'));
+  const key = 'frontend-gacha:' + location.href.split('?')[0].split('#')[0];
+  function choose(id, restore) {
+    const chosen = buttons.find(button => button.dataset.id === id);
+    if (!chosen) return;
+    buttons.forEach(button => {
+      const active = button === chosen;
+      button.setAttribute('aria-pressed', String(active));
+      button.textContent = active ? '已选中' : '选这套';
+      button.closest('.card').classList.toggle('selected', active);
+    });
+    feedback.value = '$frontend-gacha 我选择 ' + document.body.dataset.run + ' 的方案 '
+      + id + '（' + chosen.dataset.name + '）。请保留全部预览，并单独整理选中方案代码。';
+    copy.disabled = false;
+    status.textContent = '已选中 ' + id + ' · ' + chosen.dataset.name + '。复制后发回任务即可。';
+    if (!restore) { try { localStorage.setItem(key, id); } catch (_) {} }
+  }
+  buttons.forEach(button => button.addEventListener('click', () => choose(button.dataset.id, false)));
+  ['desktop', 'mobile'].forEach(mode => document.getElementById(mode).addEventListener('click', () => {
+    document.body.classList.toggle('mobile', mode === 'mobile');
+    ['desktop', 'mobile'].forEach(id => document.getElementById(id).setAttribute('aria-pressed', String(id === mode)));
+  }));
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(feedback.value);
+      status.textContent = '已复制。请粘贴到当前 Codex 任务。';
+    } catch (_) {
+      feedback.focus(); feedback.select();
+      status.textContent = '文字已选中，请按 Ctrl+C（Mac 为 ⌘C）复制后发回任务。';
+    }
+  });
+  try { choose(localStorage.getItem(key), true); } catch (_) {}
+})();
+</script>
+</body>
+</html>

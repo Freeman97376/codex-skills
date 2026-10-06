@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Gacha"
+  short_description: "Explore five small frontend demos and keep your favorite"
+  default_prompt: "Use $frontend-gacha to create five distinct small frontend demos for my prompt under ./office/frontend-gacha/."

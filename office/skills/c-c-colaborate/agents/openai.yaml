@@ -1,0 +1,6 @@
+interface:
+  display_name: "C-C colaborate"
+  short_description: "Explicit dual-model reviews with shared facts and tests"
+  default_prompt: "Use $c-c-colaborate for this task; first confirm both models, reasoning levels, roles, and billing routes."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Builder and Benchmarker"
+  short_description: "Build Codex skills and benchmark them with controlled usage"
+  default_prompt: "Use $build-and-benchmark-skills to create a focused Codex skill, then execute a dry-run-frozen SkillBench A/B evaluation within a two-session cap."
