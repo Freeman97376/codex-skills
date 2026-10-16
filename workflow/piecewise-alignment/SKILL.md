@@ -1,6 +1,6 @@
 ---
 name: piecewise-alignment
-description: Run one-question-at-a-time incremental alignment only when the user invokes /piecewise or $piecewise-alignment, or explicitly asks for piecewise alignment. Persist a living checkpoint under the project's office directory; never activate from task complexity alone or use during implementation.
+description: Run persistent incremental alignment in Standard one-question mode or Range grouped-question mode when explicitly invoked with /piecewise, /range, $piecewise-alignment, or a matching user request. Keep a project Office checkpoint; do not activate from complexity alone or implement while alignment is active.
 ---
 
 # Piecewise Alignment
@@ -9,7 +9,8 @@ Turn a user-selected topic into a durable, reviewable agreement without starting
 
 ## Enter and Leave the Mode
 
-- Enter only when the user invokes `/piecewise` or `$piecewise-alignment`, or explicitly asks for one-question-at-a-time piecewise alignment.
+- Enter **Standard** mode when the user invokes `/piecewise` or `$piecewise-alignment`, or explicitly asks for one-question-at-a-time alignment. Enter **Range** mode when the user invokes `/range` or explicitly requests its grouped form; `/range` may start alignment directly.
+- `/piecewise` or `/range off` switches an active Range session to Standard. Preserve the chosen mode until an explicit switch or exit; mode switching does not reset decisions or authorize implementation.
 - Never enter because a task is complex, ambiguous, or would benefit from more planning.
 - Keep the mode active until the user asks to stop, pause, finalize, implement, or switch workflows.
 - Treat `implement` as leaving alignment mode. Finalize the checkpoint handoff before beginning implementation.
@@ -18,7 +19,7 @@ Turn a user-selected topic into a durable, reviewable agreement without starting
 ## Resolve the Checkpoint
 
 1. Resolve the real project root. Use the Git root for a checkout; otherwise use the user-selected project directory.
-2. Read the active root and `office/` governance before writing. If the project is missing its required governance structure, follow the active governance bootstrap instead of creating a partial `office/` tree.
+2. Read the active root and `office/` governance before writing. If adopted, read the project's Agent entrance and current state, then the matching checkpoint and relevant decisions/handoffs. Follow the active governance bootstrap only within its applicable authorization; report missing records during read-only work instead of creating a partial `office/` tree.
 3. Store the canonical checkpoint under `<project-root>/office/piecewise/<type>/<topic-slug>.md`.
 4. Use one of these types:
    - `requirements` for product behavior, scope, and acceptance decisions.
@@ -37,13 +38,13 @@ This version is instruction-only. Do not create helper scripts during an alignme
 
 ## Maintain the Conversation
 
-1. Ask exactly one focused question in each final response.
+1. While actively eliciting decisions, Standard asks exactly one focused question per turn. Range asks one small numbered batch of similar, independent questions; do not batch decisions whose answers depend on one another. Pause/finalize/implementation handoffs need not ask another question.
 2. Before asking the next question, briefly paraphrase the user's latest answer.
-3. If an answer is ambiguous, state the current interpretation and ask one clarification instead of advancing.
+3. If an answer is ambiguous, state the interpretation and clarify it before dependent decisions. In Range, retain confirmed independent answers and carry unresolved items with their original numbers.
 4. Keep `Confirmed`, `TBD`, and `Working assumptions` distinct.
-5. A bare yes or no applies only to the most recent unanswered question.
-6. When exactly one yes/no confirmation is active, treat a standalone `y` or `Y` as yes. Do not apply this shorthand inside other text or to an open-ended question.
-7. A correction supersedes the earlier interpretation. Update conflicting checkpoint text rather than preserving both as current truth.
+5. In Standard, a bare yes/no applies only to the most recent unanswered question; standalone `y` or `Y` means yes only for that unambiguous yes/no item.
+6. In Range, a bare `y` confirms the whole currently presented batch only when every item is an unambiguous yes/no question. Otherwise require numbered answers; do not infer choices for unanswered or open-ended items. Partial answers confirm only their identified items. An answer to an older batch never silently confirms a later one.
+7. A correction supersedes the earlier interpretation. Keep one current decision and a short dated supersession note or link for material changes; do not leave incompatible decisions current or erase their durable history.
 8. When the user marks a detail TBD, record it as TBD and move to the next framework-level decision.
 9. Prefer structure, boundaries, and flow before numerical tuning or content polish.
 10. Do not implement, prototype, or expand scope while the mode is active.
@@ -56,10 +57,11 @@ After each explicit decision, update the checkpoint before asking the next quest
 ---
 piecewise_version: 1
 status: active
+mode: standard
 type: governance
 topic: example-topic
 updated_at: 2026-08-28T12:00:00-07:00
-next_question: "Exact next unanswered question"
+next_question: "Exact next unanswered question."
 ---
 
 # Example Topic
@@ -86,16 +88,26 @@ Exact next unanswered question.
 ```
 
 - Use an ISO 8601 timestamp with the local UTC offset.
-- Keep `next_question` identical in the frontmatter and body.
+- Keep `next_question` identical in the frontmatter and body. For Range, store the full numbered unanswered batch as a YAML block scalar (`next_question: |-`) and repeat the same numbered text under Next question; use `mode: range`. Keep item numbers stable while the batch is pending.
+- Existing version-1 checkpoints without `mode` default to Standard unless the current user explicitly selects Range. Add the field on the next authorized update; do not bulk-migrate historical checkpoints.
 - Do not store credentials, private keys, unnecessary personal data, raw chain-of-thought, or full chat transcripts.
 - If persistence fails, say that the checkpoint was not saved and preserve the exact next question in the response. Do not claim a successful checkpoint update.
 
 ## Pause, Resume, and Finalize
 
 - On pause, set `status: paused` and preserve the exact next question.
-- On resume, inspect `office/piecewise/` and load the matching checkpoint. If it is active or paused, paraphrase the latest confirmed state and continue with its exact next question. If it is finalized but still valid context for the same topic, reactivate and reuse it instead of creating a duplicate.
+- On explicit resume, inspect `office/piecewise/` and load the matching checkpoint. If active or paused, restore its mode, paraphrase the latest confirmed state and continue with its exact unanswered question/batch. A current explicit mode command overrides the saved mode. Reactivate a finalized checkpoint only when the user actually resumes that topic; merely reading it at project startup does not reopen it.
 - If multiple checkpoints plausibly match, ask one focused question to choose among them.
 - On finalize, set `status: finalized` and produce a clean handoff separating Confirmed, TBD, Working assumptions, and Unresolved conflicts.
 - Completion or finalization alone does not require archiving. Leave a checkpoint at its stable path while it remains valid context.
 - A checkpoint is eligible for archiving only when it has been replaced, abandoned, or merged and should no longer be loaded as default context.
 - When a checkpoint is eligible, ask the user for confirmation immediately before moving it to `office/piecewise/archive/<type>/<topic-slug>.md`. Never archive automatically.
+
+
+## Shared facts and implementation handoff
+
+The stable Piecewise checkpoint owns this topic's Confirmed, TBD, assumptions and unanswered questions; do not create a competing decision list in the human or Agent entrance. Confirmed means an agreed requirement or decision, not implemented, tested or deployed.
+
+Within authorized persistence, link material accepted decisions from the existing project decision index and update only affected planned scope, blocker or next-action facts. On finalization or implementation handoff, identify the accepted scope, unresolved decisions and checkpoint path; use an existing handoff if needed rather than copying the full checkpoint. Product completion changes only after implementation evidence exists. General questions or explicit read-only requests do not write checkpoints or shared records.
+
+At pause, finalization or implementation handoff, report the saved checkpoint and affected shared records, or the no-update reason; disclose failed/deferred persistence and its next step. Do not append a task log or rewrite both entrances after every answer. Preserve the project's current human and Agent reading levels.

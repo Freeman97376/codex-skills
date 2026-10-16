@@ -64,13 +64,24 @@ def selection(api, root, spec):
     return entries
 
 
-def prepare(api, spec, index, output, max_chars=None):
+def prepare(api, spec, index, output, max_chars=None, project_structure=None):
     spec = copy.deepcopy(spec)
     root = api.validate_spec(spec)
     entries, sha = load_index(api, root, index)
     spec['files'] = list(entries)
     spec['context_index'] = {'path': index, 'sha256': sha}
     spec['max_packet_chars'] = min(spec['max_packet_chars'], 120000) if max_chars is None else max_chars
+    if project_structure is not None:
+        if 'restricted_read' in spec:
+            raise BridgeError('Prepare project mode from a base without an existing read configuration')
+        deferred = [name for name, entry in entries.items()
+                    if name != project_structure and name not in api.GOVERNANCE
+                    and entry['role'] != 'brief'
+                    and name.rsplit('/', 1)[-1].lower() not in {'agents.md', 'claude.md', 'claude.local.md'}]
+        spec['restricted_read'] = {'mode': 'project', 'structure': project_structure, 'files': deferred,
+                                  'max_requests': 24, 'max_response_chars': 12000,
+                                  'max_total_chars': 120000, 'max_turns': 12}
+
     api.validate_spec(spec)
     # Refuse to overwrite a confirmed run or any existing draft.
     output = Path(output).resolve()
@@ -112,17 +123,22 @@ def metrics(packet, prompt, limit):
     for name, source in packet['sources'].items():
         if isinstance(source, dict):
             size = sum(len(e['text']) for e in source['excerpts'])
-            mode = 'excerpt'
+            mode = 'deferred' if name in packet.get('restricted_read', {}).get('catalog', {}) else 'excerpt'
         else:
             size = len(source or '')
             mode = 'deleted' if source is None else 'full'
         sizes.append({'path': name, 'characters': size, 'mode': mode})
     chars = len(prompt)
-    return {'prompt_characters': chars, 'limit_characters': limit, 'within_limit': chars <= limit,
+    result = {'prompt_characters': chars, 'limit_characters': limit, 'within_limit': chars <= limit,
             'source_files': len(sizes), 'largest_sources': sorted(sizes, key=lambda x: -x['characters'])[:10],
             'unreviewed_changed_paths': packet['coverage']['unreviewed_changed_paths'],
             'warnings': (['Large packet: narrow the Office index before dispatch'] if chars > 120000 else []),
             'token_estimate': 'not provided; characters are not tokens', 'model_calls': 0}
+    if 'restricted_read' in packet:
+        result['restricted_read'] = packet['restricted_read']
+        result['initial_plus_read_chars_limit'] = chars + packet['restricted_read']['limits']['max_total_chars']
+        result['read_budget_note'] = 'Counts payload characters once; not cumulative model input tokens or billing'
+    return result
 
 
 def cache_observation(metadata):

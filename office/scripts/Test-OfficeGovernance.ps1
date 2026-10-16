@@ -38,6 +38,11 @@ $requiredFiles = @(
     'office\templates\test-case.template.md',
     'office\templates\known-error.template.md',
     'office\templates\global-AGENTS.md',
+    'office\templates\bootstrap-manifest.psd1',
+    'office\templates\root-AGENTS.template.md',
+    'office\templates\office-AGENTS.template.md',
+    'office\templates\office-README.template.md',
+    'office\skills\manage-agent-governance\references\maintenance.md',
     'office\tests\cases.md',
     'office\tests\Test-OfficeGovernance.ps1',
     'office\tests\Test-ChangeTestGovernance.ps1'
@@ -57,6 +62,87 @@ if (Test-Path -LiteralPath $rootAgents -PathType Leaf) {
         if ($rootContent -notlike "*$requiredText*") {
             Add-Failure "Root AGENTS.md does not contain: $requiredText"
         }
+    }
+}
+
+$officeAgents = Join-Path $resolvedRoot 'office\AGENTS.md'
+if (Test-Path -LiteralPath $officeAgents -PathType Leaf) {
+    $officeContent = Get-Content -LiteralPath $officeAgents -Raw
+    if ($officeContent -notmatch '<!-- test-governance:start -->' -or $officeContent -notmatch '<!-- test-governance:end -->') {
+        Add-Failure 'Office AGENTS.md is missing the change-test governance block.'
+    }
+}
+
+function Test-ContainedFile {
+    param([string]$Base, [string]$Relative)
+    if ([IO.Path]::IsPathRooted($Relative)) { return $false }
+    $path = [IO.Path]::GetFullPath((Join-Path $Base $Relative))
+    if (-not $path.StartsWith($resolvedRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { return $false }
+    $cursor = $path
+    while ($cursor) {
+        if (Test-Path -LiteralPath $cursor) {
+            if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { return $false }
+        }
+        $cursor = Split-Path -Parent $cursor
+    }
+    return (Test-Path -LiteralPath $path -PathType Leaf)
+}
+
+$manifestPath = Join-Path $resolvedRoot 'office\templates\bootstrap-manifest.psd1'
+if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+    try {
+        $manifest = Import-PowerShellDataFile -LiteralPath $manifestPath
+        if ($manifest.Version -ne 1) { Add-Failure 'Unsupported bootstrap manifest version.' }
+        $targets = @{}
+        foreach ($entry in $manifest.Files) {
+            $targetKey = $entry.Target.Replace('\', '/').ToLowerInvariant()
+            if ($targets.ContainsKey($targetKey)) { Add-Failure "Duplicate bootstrap destination: $targetKey" }
+            $targets[$targetKey] = $true
+            foreach ($relative in @($entry.Source, $entry.Target)) {
+                if ($relative -match '(^|[\\/])(\.\.|\.local|\.publish|\.skillbench|__pycache__|node_modules|frontend-gacha)([\\/]|$)') {
+                    Add-Failure "Excluded bootstrap path: $relative"
+                }
+            }
+            if (-not (Test-ContainedFile -Base (Join-Path $resolvedRoot 'office') -Relative $entry.Source)) {
+                Add-Failure "Missing or unsafe bootstrap source: $($entry.Source)"
+            }
+            if (-not (Test-ContainedFile -Base $resolvedRoot -Relative $entry.Target)) {
+                Add-Failure "Missing or unsafe bootstrap target: $($entry.Target)"
+            }
+        }
+    } catch { Add-Failure "Invalid bootstrap manifest: $($_.Exception.Message)" }
+}
+
+# Validate bundled references and executable examples, not arbitrary external links.
+$packageDocs = @(
+    'office/skills/manage-agent-governance/SKILL.md',
+    'office/skills/manage-agent-governance/references/maintenance.md',
+    'office/skills/manage-agent-governance/references/records.md',
+    'office/records/README.md',
+    'office/records/agent-index.md',
+    'office/records/overview.md',
+    'office/records/current-state.md',
+    'office/records/architecture/overview.md',
+    'office/templates/global-AGENTS.md',
+    'office/templates/office-README.template.md'
+)
+foreach ($relative in $packageDocs) {
+    $doc = Join-Path $resolvedRoot $relative
+    if (-not (Test-ContainedFile -Base $resolvedRoot -Relative $relative)) { continue }
+    $body = Get-Content -LiteralPath $doc -Raw
+    foreach ($link in [regex]::Matches($body, '\]\(([^)]+)\)')) {
+        $href = $link.Groups[1].Value
+        if ($href -match '^(?:[a-zA-Z][a-zA-Z0-9+.-]*:|#)') { continue }
+        $href = ($href -split '#', 2)[0]
+        if (-not (Test-ContainedFile -Base (Split-Path -Parent $doc) -Relative $href)) {
+            Add-Failure "Broken or unsafe local reference in ${relative}: $href"
+        }
+    }
+    foreach ($block in [regex]::Matches($body, '(?s)```powershell\s*\r?\n(.*?)```')) {
+        $exampleTokens = $null
+        $exampleErrors = $null
+        [void][Management.Automation.Language.Parser]::ParseInput($block.Groups[1].Value, [ref]$exampleTokens, [ref]$exampleErrors)
+        foreach ($parseError in $exampleErrors) { Add-Failure "Invalid PowerShell example in ${relative}: $($parseError.Message)" }
     }
 }
 
@@ -96,7 +182,7 @@ foreach ($file in $powerShellFiles) {
     }
 }
 
-$changeTestValidator = Join-Path $resolvedRoot 'office\scripts\Test-ChangeTestGovernance.ps1'
+$changeTestValidator = Join-Path $PSScriptRoot 'Test-ChangeTestGovernance.ps1'
 if (Test-Path -LiteralPath $changeTestValidator -PathType Leaf) {
     try {
         $changeTestValid = & $changeTestValidator -ProjectRoot $resolvedRoot -Quiet -NoExit

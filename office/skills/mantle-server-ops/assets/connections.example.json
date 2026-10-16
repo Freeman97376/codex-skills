@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "default_connection": "example",
+  "connections": [
+    {
+      "id": "example",
+      "aliases": [
+        "moi serever",
+        "moi server",
+        "tencent cloud 1"
+      ],
+      "ssh": {
+        "host": "example.com",
+        "username": "example-user",
+        "port": 22,
+        "identity_file": "C:/path/to/private-key"
+      },
+      "expected_hostname": "example-host"
+    }
+  ]
+}

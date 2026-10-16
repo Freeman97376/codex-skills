@@ -2,9 +2,13 @@
 
 Use this workflow for new reviews and repair follow-ups. It prepares unconfirmed drafts and measures input without calling either model. Existing confirmed legacy specs remain readable; do not rewrite historical run specs or confirmations.
 
+For user-requested direct project inspection, [project browsing](project-reading.md) provides a structure-first, frozen, read-on-demand alternative. Prepare its explicit catalog and read budget instead of sending entire directories inline.
+
 ## Select one coherent question
 
-Read the target project's Office index, applicable agent rules, relevant contract sections, linked test cases and known-error records locally. Use them to select sources, not as a reason to send all Office records. Keep one brief containing the original requirement, exact review boundary, baseline and limitations. Do not copy full history, original business documents, prior model opinions or raw test logs into it. For mutual first rounds exclude peer conclusions.
+Optional unchanged contracts/dependencies can use [restricted reading](restricted-reading.md) with the Claude reviewer. That opt-in mode replaces their initial source text with a frozen catalog and delivers only requested, allowlisted ranges. Keep required initial evidence and all applicable instructions inline. Track available, actually returned and unread ranges separately; deferred content is not implicitly reviewed.
+
+The lead reads the target project's Office index, applicable agent rules, adopted Agent entrance/current state, relevant contract sections, linked test cases and known-error records locally. Use current-state claims as navigation and verify them against sources. Do not pass author conclusions, peer findings or unrelated history to an independent first-round reviewer; include only task-relevant factual context in the approved packet. Use them to select sources, not as a reason to send all Office records. Keep one brief containing the original requirement, exact review boundary, baseline and limitations. Do not copy full history, original business documents, prior model opinions or raw test logs into it. For mutual first rounds exclude peer conclusions.
 
 First review: include the actual implementation and critical callers. Repair review: compare against the last reviewed source baseline and include the changed implementation, affected callers/contracts and regression tests. Preserve unresolved prior findings in their original records. A narrow follow-up does not re-certify omitted modules or erase pending context requests. Split unrelated audit questions into separate proposed scopes, but never create extra model calls without the user's existing budget/authorization.
 

@@ -1,6 +1,6 @@
 interface:
   display_name: "Piecewise Alignment"
-  short_description: "One-question alignment with durable office checkpoints"
+  short_description: "Standard or Range alignment with durable checkpoints"
   default_prompt: "Use $piecewise-alignment to refine this topic one decision at a time."
 policy:
   allow_implicit_invocation: false

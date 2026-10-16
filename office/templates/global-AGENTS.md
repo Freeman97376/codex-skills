@@ -10,13 +10,17 @@ Whenever creating a new project or adopting an existing directory as a project, 
 4. Prefer the trusted seed initializer when it exists:
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File 'C:/path/to/mantle_of_intelligence2.0
+   powershell -NoProfile -ExecutionPolicy Bypass -File 'C:\path\to\trusted-seed\office\scripts\Initialize-Office.ps1' -ProjectRoot 'C:\path\to\project' -Plan
    ```
 
-5. If the seed is unavailable, create the same structure manually. Merge existing `AGENTS.md`, skills, records, and policies; never overwrite or weaken them.
+5. Preview first. Within initialization authority omit `-Plan` to copy the explicit generic whitelist. Existing differing governance files require a separately scoped merge; `-Force` is unsupported. If the seed is unavailable, create only the generic structure manually. Never overwrite or weaken existing rules or import another project's private configuration.
 6. Run the generated `office/scripts/Test-OfficeGovernance.ps1` before feature work. Apply stricter project-specific rules when needed.
 
 Use exact `AGENTS.md` casing. Keep detailed agent interaction governance in `office/`, log only durable decisions and substantial task evidence, and never store credentials or unnecessary private user content in governance records.
+
+An explicit read-only review does not adopt or initialize a project and does not
+authorize records, repairs or test execution. Follow the user's execution limits.
+Do not automatically install optional skills, run model collaboration or publish.
 
 ## Change-Test Governance
 

@@ -84,3 +84,7 @@ Record related contracts, cases, or superseding records.
 ## Generated-input failures
 
 When an error comes from fuzz or confusing-input testing, **Trigger** must link the exact synthetic failing fixture, its transport/encoding, case ID, seed, generator version/hash, and replay command. In **Evidence**, distinguish the first observation from independent replay and from any later reduction. Keep original and reduced reproducers separately; accept a reduction only after the same oracle reproduces the same failure signature. **Verification** must link a deterministic regression replay of the retained fixture. Generating a corpus, or having a new random batch miss the failure, does not verify the error.
+
+## History and Current Status
+
+For repeated failures or a multi-error plan, also read [material-risk-history.md](material-risk-history.md). Add dated cause/attempt/result/correction entries without deleting earlier evidence. Distinguish confirmed causal mechanism, upstream trigger, inference, and disproved explanations; categorize product, fixture, environment/provider, and evidence-record issues separately. Keep a concise current checkpoint at the top or in the summary so old body wording is not mistaken for current status. New coverage gaps do not retrospectively falsify a narrow past pass, and historical verification does not prove a different path or deployment.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "上线检查与发布验收"
+  short_description: "执行上线关卡、CC 独立审查、限额模型验收并保留发布证据"
+  default_prompt: "使用 $release-preflight 检查当前项目的上线准备，自动完成范围内修复与验证，准备 CC 独立审查，在部署前向我提交具体版本与恢复预案供确认。"

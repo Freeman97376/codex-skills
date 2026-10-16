@@ -8,6 +8,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -100,21 +101,30 @@ def check_billing(provider, selection, info):
             raise BridgeError("Fable can bill usage credits without a print-mode prompt; explicit extra-usage approval required")
 
 
-def build_command(provider, executable, selection, folder, schema, session=None):
+def build_command(provider, executable, selection, folder, schema, session=None, reader=None):
     folder = Path(folder)
+    if reader and provider != "claude":
+        raise BridgeError("Restricted reading currently supports only the Claude reviewer")
     if provider == "claude":
         settings = folder / "settings.json"
-        settings.write_text(json.dumps({"disableAllHooks": True}), encoding="utf-8")
+        settings.write_text(json.dumps({"disableAllHooks": True, **(
+            {"autoMemoryEnabled": False, "claudeMdExcludes": ["**"], "enabledPlugins": {}}
+            if reader else {})}), encoding="utf-8")
         mcp = folder / "mcp.json"
-        mcp.write_text('{"mcpServers":{}}', encoding="utf-8")
+        mcp.write_text(json.dumps({"mcpServers": reader["servers"] if reader else {}}), encoding="utf-8")
         command = executable + [
             "-p", "--model", selection["model"], "--effort", selection["effort"],
             "--output-format", "json", "--json-schema", json.dumps(schema, separators=(",", ":")),
-            "--safe-mode", "--restricted", "--tools", "", "--disallowedTools", "mcp__*",
+            "--restricted", "--tools", "",
             "--permission-mode", "dontAsk", "--permission-prompts", "none",
             "--strict-mcp-config", "--mcp-config", str(mcp),
             "--settings", str(settings), "--disable-slash-commands",
             "--no-chrome"]
+        if reader:
+            command += ["--allowedTools", *reader.get("tools", ["mcp__review_packet__read_source"]), "--setting-sources", "",
+                        "--max-turns", str(reader["max_turns"])]
+        else:
+            command += ["--safe-mode", "--disallowedTools", "mcp__*"]
         if session is None:
             command += ["--no-session-persistence"]
         else:
@@ -244,11 +254,14 @@ def parse_output(provider, result, folder):
                     "duration_seconds": result["duration_seconds"]}
 
 
-def invoke(provider, selection, prompt, schema, timeout):
+def invoke(provider, selection, prompt, schema, timeout, read_bundle=None):
+    if read_bundle is not None and provider != "claude":
+        raise BridgeError("Restricted reading currently supports only the Claude reviewer")
     info = preflight(provider)
     check_billing(provider, selection, info)
     session = None
     config = None
+    read_audit = None
     if provider == "claude":
         if os.environ.get("CLAUDE_CODE_SKIP_PROMPT_HISTORY", "").lower() in {"1", "true"}:
             raise BridgeError("Claude history is disabled by CLAUDE_CODE_SKIP_PROMPT_HISTORY; resolve explicitly before a saved review")
@@ -262,9 +275,35 @@ def invoke(provider, selection, prompt, schema, timeout):
         if session:
             Path(session["cwd"]).mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="codex-claude-review-") as temporary:
-            command = build_command(provider, info["command"], selection, temporary, schema, session=session)
-            result = run_process(command, session["cwd"] if session else temporary, prompt, timeout)
-            report, metadata = parse_output(provider, result, temporary)
+            reader = None
+            if read_bundle is not None:
+                import restricted_read
+                # Safe mode disables all MCP; bare mode changes subscription auth. Neither is used here.
+                if any(os.environ.get(key, '').lower() in {'1', 'true'} for key in
+                       ('CLAUDE_CODE_SAFE_MODE', 'CLAUDE_CODE_SIMPLE')):
+                    raise BridgeError("Inherited Claude mode conflicts with restricted reading")
+                bundle_path = Path(temporary) / 'frozen.json'
+                bundle_path.write_text(restricted_read.encode(read_bundle), encoding='utf-8')
+                audit_path = Path(temporary) / 'reads.json'
+                reader = {'servers': {'review_packet': {'type': 'stdio', 'command': sys.executable,
+                    'args': ['-X', 'utf8', str(Path(__file__).with_name('restricted_read.py').resolve()),
+                             str(bundle_path), restricted_read.fingerprint(read_bundle), str(audit_path)]}},
+                          'max_turns': read_bundle['limits']['max_turns'],
+                          'tools': ['mcp__review_packet__read_source'] + (
+                              ['mcp__review_packet__search_sources'] if read_bundle.get('mode') == 'project' else [])}
+            command = build_command(provider, info["command"], selection, temporary, schema, session=session, reader=reader)
+            try:
+                result = run_process(command, session["cwd"] if session else temporary, prompt, timeout)
+                report, metadata = parse_output(provider, result, temporary)
+            finally:
+                if reader:
+                    try:
+                        read_audit = json.loads(audit_path.read_text(encoding='utf-8'))
+                    except (OSError, ValueError):
+                        read_audit = {'status': 'unavailable'}
+            if reader:
+                restricted_read.verify_audit(read_bundle, read_audit)
+                metadata['restricted_read'] = read_audit
         actual = metadata["actual_models"]
         if actual and any(model != selection["model"] for model in actual):
             raise BridgeError(f"Model mismatch: requested {selection['model']}, reported {', '.join(actual)}")
@@ -277,6 +316,8 @@ def invoke(provider, selection, prompt, schema, timeout):
     except (BridgeError, OSError, ValueError, TypeError, KeyError) as exc:
         if session:
             exc.claude_session = session
+        if read_audit is not None:
+            exc.restricted_read = read_audit
         raise
     finally:
         # Inspect only this invocation's transcript; never copy other conversations.

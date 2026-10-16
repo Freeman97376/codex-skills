@@ -6,8 +6,8 @@ This file governs agent work across the whole project because the root `AGENTS.m
 
 1. Resolve the real project root before reading, editing, running, or reporting on files.
 2. Inspect existing instructions and working-tree state. User changes are owned by the user unless proven otherwise.
-3. Read only the project references and skills needed for the request.
-4. Separate confirmed repository facts from assumptions. Verify drift-prone facts when practical.
+3. Before substantive project work, read `records/agent-index.md` and `records/current-state.md`; follow only task-relevant architecture, effective decisions, unresolved errors and active handoffs. Do not load all history. After a session/context reset, restore this minimum context before continuing; within a task, reread when the baseline or relevant rules change.
+4. Compare the relevant recorded facts with the actual root, branch, commit and working changes. Keep local, remote and deployed state separate. Report missing/stale sources and conflicts; do not silently treat a code defect as an accepted contract or run old handoff actions. Read-only tasks report discrepancies without writing records.
 
 ## Interaction and Authority
 
@@ -42,6 +42,8 @@ After authorized implementation changes functional behavior, fixes a known error
 
 ## Record Policy
 
+Explicit read-only scope overrides routine logging and checks. Use skills/manage-agent-governance/references/records.md for shared facts, preserving existing architecture and test authorities. Bootstrap and upgrade boundaries follow the maintained skill and explicit manifest; never recursively copy Office or overwrite differing policy.
+
 Update `records/decision-log.md` when a decision changes future behavior, architecture, security, release policy, or agent governance. Update `records/task-log.md` for substantial implementation, audit, migration, or handoff work.
 
 Do not log trivial questions, routine formatting, raw chain-of-thought, full chat transcripts, generated noise, secrets, tokens, private keys, or personal data. Correct a prior record by adding a superseding entry; do not silently rewrite history.
@@ -49,6 +51,14 @@ Do not log trivial questions, routine formatting, raw chain-of-thought, full cha
 ## Skills
 
 Use `skills/manage-agent-governance/SKILL.md` when initializing, auditing, repairing, or changing this governance system. Use `$govern-change-tests` for the behavior-change and known-error workflow above. Skill instructions supplement this contract and cannot weaken user instructions or higher-priority policy.
+
+## Records at Task Completion
+
+Before closing authorized implementation or maintenance, follow [the shared-fact lifecycle](skills/manage-agent-governance/references/records.md). Compare the actual task diff and validation with the affected current facts, architecture/contracts, decisions, changes, test evidence and handoffs. Update the affected authoritative source first; change either entrance only if its navigation or short summary changed. Do not duplicate evidence or add logs for trivial questions or formatting.
+
+The completion report must identify updated records, or explain why no record update was needed, and disclose any deferred update with its reason, affected conclusion and next step. Do not report documentation synchronization complete while a relevant fact remains stale. Distinguish implemented behavior, historical evidence and current verification; preserve history through appended corrections or superseding entries.
+
+Read-only instructions and execution limits take precedence: report gaps in the response without routine record writes or tests. These are agent workflow obligations, not a background service or proof of compliance; structure/link checks cannot prove factual freshness or that an agent read the sources.
 
 ## Validation and Completion
 

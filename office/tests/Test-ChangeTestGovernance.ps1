@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 Set-StrictMode -Version Latest
@@ -41,7 +41,18 @@ try {
 
     $targetRoot = Join-Path $testRoot 'fixture-project'
     New-Item -ItemType Directory -Path $targetRoot | Out-Null
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'office') -Destination (Join-Path $targetRoot 'office') -Recurse
+    # Build a clean fixture; real records reference project tests outside office/.
+    $fixtureOffice = Join-Path $targetRoot 'office'
+    $fixtureTemplates = Join-Path $fixtureOffice 'templates'
+    $fixtureRecords = Join-Path $fixtureOffice 'records'
+    New-Item -ItemType Directory -Path $fixtureTemplates -Force | Out-Null
+    New-Item -ItemType Directory -Path $fixtureRecords -Force | Out-Null
+    foreach ($templateName in @('test-ledger.template.md', 'test-case.template.md', 'known-error.template.md')) {
+        Copy-Item -LiteralPath (Join-Path $projectRoot ('office\templates\' + $templateName)) -Destination (Join-Path $fixtureTemplates $templateName)
+    }
+    Copy-Item -LiteralPath (Join-Path $fixtureTemplates 'test-ledger.template.md') -Destination (Join-Path $fixtureRecords 'test-ledger.md')
+    $fixtureExit = Invoke-Validator -Root $targetRoot
+    Assert-True -Condition ($fixtureExit -eq 0) -Name 'Isolated fixture validates without unrelated project records'
     New-Item -ItemType Directory -Path (Join-Path $targetRoot 'tests') | Out-Null
     Set-Content -LiteralPath (Join-Path $targetRoot 'tests\example.tests.ps1') -Value "Describe 'example' { It 'passes' { `$true | Should -BeTrue } }" -Encoding UTF8
 

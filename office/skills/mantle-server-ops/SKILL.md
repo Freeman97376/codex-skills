@@ -14,28 +14,29 @@ description: Inspect or deploy the Mantle server, including the saved aliases mo
 ## Inputs / context to gather
 
 1. Confirm the repo is the inner `...\mantle_of_intelligence2.0` checkout. If it has moved, resolve the current project root.
-2. Confirm whether the task is:
+2. Read the target project's root/Office governance and, when adopted, its Agent entrance/current state and relevant operations handoff. Treat prior server facts as dated observations; reconcile them with the live service before relying on them. Reading records does not authorize a connection or mutation.
+3. Confirm whether the task is:
    - deploy/update
    - runtime failure diagnosis
    - upload/auth/path verification
    - server resource/status report
-3. Use these recorded identifiers as starting points; verify them against the current repo and service configuration before acting:
+4. Use these recorded identifiers as starting points; verify them against the current repo and service configuration before acting:
    - `example-app.service`
    - app direct health `http://127.0.0.1:8001/health`
    - public path `https://example.com/bid-system/`
    - server app dir `/opt/projects/example-app`
    - The public domain and base path are user-controlled; do not replace a current user-specified value with these historical defaults.
-4. If the user mentions uploads or auth, inspect the frontend/backend contract points:
+5. If the user mentions uploads or auth, inspect the frontend/backend contract points:
    - `frontend/assets/upload-reliability.js`
    - `app/api/routes/files.py`
    - `app/security/auth.py`
    - `app/api/routes/auth.py`
-5. If the user mentions deployment or restart, check whether `scripts/deploy_server.sh` is present and whether the server is already on the target commit.
-6. Resolve the saved local connection below before asking for an SSH address or key path. Establish whether the user wants direct operation or commands to run themselves. A saved profile identifies the connection; it does not expand the user's requested scope or authorize a deployment.
+6. If the user mentions deployment or restart, check whether `scripts/deploy_server.sh` is present and whether the server is already on the target commit.
+7. Resolve the saved local connection below before asking for an SSH address or key path. Establish whether the user wants direct operation or commands to run themselves. A saved profile identifies the connection; it does not expand the user's requested scope or authorize a deployment.
 
 ## Saved local connections
 
-Read [.local/connections.json](.local/connections.json) from this skill's own directory before a server connection task. Resolve this path relative to `SKILL.md`, including when invoked through the personal skill junction, not relative to the project working directory.
+The public package omits the private profile. Create your own ignored .local/connections.json using [the generic example](assets/connections.example.json) before a server connection task; never commit the populated profile. Read that local profile from this skill's own directory. Resolve this path relative to `SKILL.md`, including when invoked through the personal skill junction, not relative to the project working directory.
 
 - The JSON file has `schema_version: 1`, a `default_connection` ID, and a `connections` list. Each connection contains `id`, `aliases`, an `ssh` object (`host`, `username`, `port`, `identity_file`), and `expected_hostname`.
 - Match the requested connection ID or alias after trimming, collapsing repeated whitespace, and ignoring case. Preserve the user-provided spelling `moi serever`; `moi server` and `tencent cloud 1` are equivalent aliases. For a Mantle task without a named target, use `default_connection`. An unknown or ambiguous alias requires clarification; never silently select another server. Current explicit user connection details take precedence over saved values.
@@ -99,3 +100,12 @@ Read [.local/connections.json](.local/connections.json) from this skill's own di
 - If auth was in scope, confirmed both public routes and protected-route behavior against the current contract.
 - If deploy was in scope, confirmed the script or command path avoided dirty-file overwrite and used `systemd`.
 - Final report gives exact commands, concrete status, and the remaining risk or next step; distinguish user-run commands from checks actually executed.
+
+
+## Operational facts and completion
+
+Status/diagnosis requests remain read-only, including local project records, unless record maintenance is authorized. Report stale observations in the response; do not turn every health check into a history entry. Missing records do not authorize bootstrap, repair or a different server connection.
+
+For authorized deployment, recovery or substantial operations work, update the existing operations/release record first. Record observation time, non-secret environment identity, actual running version (or unknown), affected health layers, failure/recovery results and evidence limits. Keep local checkout, candidate and observed server versions separate. A restart or direct health pass does not establish public business acceptance. Changes to service, configuration, code or time-sensitive environment invalidate the corresponding earlier observation as current proof; when stale, recheck only within current connection authority.
+
+Link material changes in risk, blocker or deployed state from the project's shared current state; do not duplicate release gates or raw logs. Carry unresolved work to the existing handoff, retaining original failures. Keep addresses, usernames, key paths and credentials in their controlled profiles, not shared summaries. Finish with records updated, or no-update reason, and deferred updates with impact/next step. Entrance wording changes only when its navigation or summary is affected; no background monitoring is implied.

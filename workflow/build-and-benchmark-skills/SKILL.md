@@ -9,7 +9,7 @@ Produce the smallest skill package that changes agent behavior usefully, then me
 
 ## Resolve the Work
 
-1. Resolve the real project root and read its applicable `AGENTS.md` and governance files.
+1. Resolve the real project root and read its applicable `AGENTS.md` and governance files. If shared records are adopted, read the Agent entrance/current state and only relevant prior evaluation/handoff evidence; a prior verdict is tied to its frozen inputs, not the current editable source.
 2. Inspect existing skills, tests, and uncommitted work before choosing a destination or baseline. Preserve user-owned files.
 3. Extract the requested outcome, trigger boundary, required artifacts, permission limits, and observable success criteria. Make low-risk assumptions when these are clear; ask only when a missing choice would materially change the result.
 4. Read [references/skill-package.md](references/skill-package.md) before creating or substantially restructuring a skill.
@@ -23,6 +23,10 @@ Produce the smallest skill package that changes agent behavior usefully, then me
 - Scaffold every required parent directory before applying a multi-file patch. Do not depend on a patch operation to create nested directories or treat a partially applied patch as success.
 - Treat supplied benchmark fixtures as opaque bytes. Copy them with `scripts/copy_fixture.py`, verify the reported hash, and never reconstruct them from terminal output or displayed text.
 - Validate frontmatter, resource links, scripts, and observable behavior. Remove unfinished placeholders before evaluation.
+
+## Maintaining this workflow
+
+Editing this skill's instructions does not invoke its benchmark workflow on itself or authorize nested model sessions, Docker installation/builds, credentials or publication. Use proportionate static/local checks for such maintenance and label the changed instructions empirically unverified unless a separately authorized comparison actually runs. When the user requests a skill produced with empirical evaluation through this workflow, the evaluation contract below still applies.
 
 ## Require SkillBench Evaluation
 
@@ -81,3 +85,12 @@ Use `scripts/plan_skillbench_budget.py` to make the calculation explicit. A dry 
 - Accept a candidate only when the evidence supports the stated comparison question. Treat a one-run tie as inconclusive, not proof of equivalence.
 - Never describe a generated case, dry-run, or environment-blocked comparison as a completed empirical evaluation.
 - Report changed files, static validation, exact model-session count, verifier outcome, model and reasoning settings, limitations, and the next smallest useful action.
+
+
+## Shared project facts and evidence boundaries
+
+Frozen cases, SkillPacks and run/comparison evidence remain immutable evaluation sources. Keep fixtures, raw traces, caches and large generated artifacts in their existing benchmark/output locations, outside Office records and publishable skill content. Governance keeps concise IDs, hashes, environment, verdict, limitations and links; do not regenerate or copy benchmark artifacts merely to update a summary.
+
+After an authorized build/evaluation, update affected project capability/readiness facts with the narrow result, exact frozen candidate and actual model/environment. Editing the maintained skill afterward makes that verdict historical for the new source; a sentinel result never proves broad quality or global installation/publication. Distinguish edited source, frozen candidate, evaluated result and installed/published version.
+
+Use the target project's completion contract: update authoritative evidence first, then affected shared facts, and entrance navigation only as needed. Report updated records, no-impact reasons and deferred items with impact/next step. Read-only review writes no records; an environment-blocked run preserves failed evidence and cannot be reclassified as success to finish the task.

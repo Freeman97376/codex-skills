@@ -2,7 +2,13 @@
 
 Use Python 3.11+ and absolute script paths. No third-party Python package is needed. The helper orchestrates reviewers; the active host agent performs authorized implementation and repairs. Running preflight, init, status, snapshot, or adapter installation makes no model inference calls. Review and cross-review do consume model usage.
 
+## Project browsing option
+
+For structure-first project inspection, see [project reading](project-reading.md). It uses the existing `restricted_read` spec with `mode: project` and an inline Office `structure` path. `project_map.py` creates an offline candidate catalog. Only this snapshot-audit mode enables literal search and permits complete targets to be deferred; normal changed-file and restricted-dependency rules remain unchanged.
+
 ## Prepare and confirm
+
+The optional `restricted_read` spec field enables [frozen allowlisted reading](restricted-reading.md) for a Claude-only reviewer run. It adds explicit file, request, response-character, cumulative-character and turn limits; omission preserves packet-only behavior. The dependency-only form and the project mode above are the exceptions to the no-fetch descriptions below: only already-selected frozen ranges can be fetched, never missing project files.
 
 For new scopes, use [Office context selection](office-context.md) to prepare a bounded file/range index, then run `prepare --spec <base-spec> --index <Office-index> --output <new-draft>` and `inspect --spec <new-draft>`. Both are zero-inference operations. The generated optional `context_index` contains `path` and `sha256`; all other schema fields below are unchanged. Legacy specs without it keep their complete-file semantics and existing snapshot fingerprints.
 
